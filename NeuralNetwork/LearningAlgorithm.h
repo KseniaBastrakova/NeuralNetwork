@@ -135,7 +135,7 @@ public:
 			error = currentError;
 		    currentError = CountError( expectedValues, result );
 			i++;
-			std::cout << currentError << "  " << std::endl;;
+		//	std::cout << currentError << "  " << std::endl;;
 		}
 	}
 	double CountError( std::vector<std::vector<double>> expectedValues, std::vector<std::vector<double>>

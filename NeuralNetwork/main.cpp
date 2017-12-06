@@ -11,7 +11,7 @@
 #include "LearningAlgorithm.h"
 #include "SerializationFunction.h"
 
-const int numberNetLearnElements = 1000;
+const int numberNetLearnElements = 1000000;
 
 int main( int argc, char** argv )
 {
@@ -28,16 +28,16 @@ int main( int argc, char** argv )
 		return 0;
 	}
 
-	std::string trainImageMNIST( "C:\\test\\train-images-idx3-ubyte\\train-images.idx3-ubyte" );
-	std::string trainLabelsMNIST( "C:\\test\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte" );
+	//std::string trainImageMNIST( "C:\\test\\train-images-idx3-ubyte\\train-images.idx3-ubyte" );
+//	std::string trainLabelsMNIST( "C:\\test\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte" );
 	
-	std::string testImageMNIST( "C:\\test\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte" );
-	std::string testLabelsMNIST( "C:\\test\\t10k-labels-idx1-ubyte\\t10k-labels.idx1-ubyte" );
+//	std::string testImageMNIST( "C:\\test\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte" );
+//	std::string testLabelsMNIST( "C:\\test\\t10k-labels-idx1-ubyte\\t10k-labels.idx1-ubyte" );
 
-//	std::string trainImageMNIST( argv[1] );
-//	std::string trainLabelsMNIST( argv[2] );
-//	std::string testImageMNIST( argv[3] );
-//	std::string testLabelsMNIST( argv[4] );
+	std::string trainImageMNIST( argv[1] );
+	std::string trainLabelsMNIST( argv[2] );
+	std::string testImageMNIST( argv[3] );
+	std::string testLabelsMNIST( argv[4] );
 	int hiddenLayerSize = 1;
 	double learnRate = 0.9;
 	double crossError = 0.001;
