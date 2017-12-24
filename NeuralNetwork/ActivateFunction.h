@@ -1,16 +1,18 @@
 #pragma once
-#include <cmath>
-class SigmoidFunction
+#include <vector>
+
+class ActivationFunction
 {
 public:
-	static double Compute( double x )
-	{
-		double r = ( 1.0 / ( 1.0 + std::exp( -0.5 * x ) ) );
-		return r;
-	}
+	double Compute( double x, const std::vector<double>& neyrons );
+	double ComputeFirstDerivative( double x,const std::vector<double>& neyrons );
+	static ActivationFunction Sigmoid();
+	static ActivationFunction SoftMax();
+private:
+	typedef double( *ComputeFunction )( double, const std::vector<double>& );
+	typedef double( *ComputeFirstDerivativeFunction )( double, const std::vector<double>& );
+	ActivationFunction( ComputeFunction, ComputeFirstDerivativeFunction );
+	ComputeFunction value;
+	ComputeFirstDerivativeFunction derivative;
 
-   static double ComputeFirstDerivative( double x )
-	{
-		return 0.5 * Compute( x ) * ( 1.0 - Compute( x ) );
-	}
 };

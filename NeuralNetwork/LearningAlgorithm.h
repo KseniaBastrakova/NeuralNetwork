@@ -1,6 +1,9 @@
 #include "ErrorFunction.h"
 #include "NeuralNetwork.h"
 #include "ActivateFunction.h"
+#include "LayerData.h"
+#include "NetworkData.h"
+#include "LossFunction.h"
 #include <limits>
 #include <iostream>
 #include <vector>
@@ -14,42 +17,25 @@ public:
 					   double theGradientSpeedParam ):
 		net(theNetWork), inputVector(theStartedValues), expectedValues(theExpectedValues), gradientSpeedParam(theGradientSpeedParam){}
 
-
-
-	std::vector<double> LearnInternalLayer( Layer* currentLayer, std::vector<double> inputErrors)
-	{
-		std::vector<double> weights;
-		std::vector<double> errors;
-		size_t size = currentLayer->GetNeuronSize();
-		for ( int i = 0; i < size; i++ )
-		{
-			double error = 0.;
-			double neyronInput = 0.;
-			for ( int j = 0; j < size; j++ )
-			{
-				 error += inputErrors[i] * currentLayer->GetWeightsNeuron( i )[j];
-				 neyronInput += currentLayer->GetWeightsNeuron( i )[j] * inputVector[i];
-			}
-			for ( int j=0; j<size; j++ )
-			weights.push_back( error * SigmoidFunction::ComputeFirstDerivative( neyronInput ) );
-			currentLayer->SetWeightsNeuron(i, weights );
-			currentLayer->SetBias( i, error * gradientSpeedParam );
-			errors.push_back( error );
-		}
-		return errors;
-	}
-
 	void Learn()
 	{
-		std::vector<double> output = net->Perform( inputVector );
-		UpdateLastLayer();
+		NetworkData output = net->Perform( inputVector );
+		/// DEBUG
+		//output[2].valuesAfterActivation[0] = 0.2698;
+		//output[2].valuesAfterActivation[1] = 0.3223;
+		//output[2].valuesAfterActivation[2] = 0.4078;
+
+			/// END DEBUG
+		UpdateLastLayer( output );
 		for ( int i = net->GetLayerSize() - 2; i >= 1; i-- )
 		{
-			UpdateLayer( i );
+			UpdateLayer( i, output );
 		}
 	}
-	void UpdateLayer( size_t idx )
+	void UpdateLayer( size_t idx, const NetworkData& data )
 	{
+		const LayerData& layerData = data[idx];
+		const LayerData& prevLayerData = data[idx - 1];
 		Layer* layer = net->layers[idx];
 		size_t numNeurons = layer->GetNeuronSize();
 		std::vector<double> prevSigma = sigma;
@@ -61,45 +47,49 @@ public:
 		weights.resize( numNeurons );
 		bias.clear();
 		bias.resize( numNeurons );
-		for ( int i = 0; i < numNeurons; i++ )
+		for ( size_t i = 0; i < numNeurons; i++ )
 		{
 			Neuron* neuron = layer->Neurons[i];
+			ActivationFunction function = neuron->GetActivationFunction();
 			double currentSigma = 0.;
-			for ( int j = 0; j < prevSigma.size(); j++ )
+			for ( size_t j = 0; j < prevSigma.size(); j++ )
 			{
 				currentSigma += prevSigma[j] * prevWeights[j][i];
 
 			}
-			sigma[i] = currentSigma * SigmoidFunction::ComputeFirstDerivative( neuron->GetLastNET() );
+			sigma[i] = currentSigma * function.ComputeFirstDerivative( layerData.nets[i], layerData.nets );
 			weights[i] = neuron->GetWeights();
 			Layer* prevLayer = net->layers[idx - 1];
 			std::vector<double> newWeights = weights[i];
-			for ( int j = 0; j < newWeights.size(); j++ )
+			for ( size_t j = 0; j < newWeights.size(); j++ )
 			{
-				newWeights[j] += gradientSpeedParam * sigma[i] * prevLayer->GetLastOutput()[j];
+				newWeights[j] += gradientSpeedParam * sigma[i] * prevLayerData.valuesAfterActivation[j];
 			}
 			neuron->SetWeights( newWeights );
 			bias[i] = neuron->GetBias();
 			neuron->SetBias( neuron->GetBias() + gradientSpeedParam * sigma[i] );
 		}
 	}
-	void UpdateLastLayer()
+	void UpdateLastLayer( const NetworkData& data )
 	{
 		Layer* layer = net->layers.back();
+		const LayerData& layerData = data[net->layers.size() - 1];
+		const LayerData& prevLayerData = data[net->layers.size() - 2];
 		sigma = std::vector<double>( expectedValues.size(), 0.0 );
 		weights.resize( expectedValues.size() );
 		bias.resize( expectedValues.size() );
+
 		for ( size_t i = 0; i < expectedValues.size(); i++ )
 		{
 			Neuron* neuron = layer->Neurons[i];
-			sigma[i] = ( expectedValues[i] - layer->LastOutput[i] ) *
-				SigmoidFunction::ComputeFirstDerivative( neuron->GetLastNET() );
+			ActivationFunction function = neuron->GetActivationFunction();
+			sigma[i] = ( expectedValues[i] - layerData.valuesAfterActivation[i] )  /**
+				function.ComputeFirstDerivative( layerData.nets[i], layerData.nets ) */;
 			weights[i] = neuron->GetWeights();
-			Layer* prevLayer = net->layers[net->layers.size() - 2];
 			std::vector<double> newWeights = weights[i];
-			for ( int j = 0; j < newWeights.size(); j++ )
+			for ( size_t j = 0; j < newWeights.size(); j++ )
 			{
-				newWeights[j] += gradientSpeedParam * sigma[i] * prevLayer->GetLastOutput()[j];
+				newWeights[j] += gradientSpeedParam * sigma[i] * prevLayerData.valuesAfterActivation[j];
 			}
 			neuron->SetWeights( newWeights );
 			bias[i] = neuron->GetBias();
@@ -131,52 +121,26 @@ public:
 		
 		while ( !IsOver(i, error, currentError) )
 		{
-			std::vector<std::vector<double>> result = LearnIteration();
+			LearnIteration();
 			error = currentError;
-		    currentError = CountError( expectedValues, result );
+		    currentError = GetError( *netWork, inputValues, expectedValues );
 			i++;
-		//	std::cout << currentError << "  " << std::endl;;
+			std::cout << "Training iteration " << i << ": cross entropy = " << currentError << ", accuracy = "
+				<< GetAccuracyPercent(*netWork, inputValues, expectedValues) << "%" << std::endl;
 		}
-	}
-	double CountError( std::vector<std::vector<double>> expectedValues, std::vector<std::vector<double>>
-					   currentValue )
-	{
-		//double error = 0.;
-		//for ( int i = 0; i < currentValue.size(); i++ )
-		//	for ( int j = 0; j < currentValue[i].size(); j++ )
-		//	{
-		//		error += ( currentValue[i][j] - expectedValues[i][j] ) * ( currentValue[i][j] - expectedValues[i][j] );
-		//	}
-		//return error;
-
-		double sumError = 0.0;
-		for ( int i = 0; i<expectedValues.size(); i++ )
-		{
-			for ( int j = 0; j < expectedValues[i].size(); j++ )
-			{
-				if ( currentValue[i][j] >0.000001 )
-				sumError += log( currentValue[i][j] ) * expectedValues[i][j];
-
-			}
-		}
-		return -1.0 * sumError / expectedValues.size();
 	}
 private:
-	std::vector<std::vector<double>> LearnIteration()
+	void LearnIteration()
 	{   
-		std::vector<std::vector<double>> currentValues;
-		for ( int i = 0; i < inputValues.size(); i++ )
+		for ( size_t i = 0; i < inputValues.size(); i++ )
 		{
-			 
 			LearningAlgorithm alg( netWork, inputValues[i], expectedValues[i], gradientSpeedParam );
 			alg.Learn();
-			currentValues.push_back( netWork->Perform( inputValues[i] ) );
 		}
-		return currentValues;
 	}
 	bool IsOver( int i, double lastError, double currentError)
 	{
-		return i > 1000 || std::fabs(lastError - currentError)/lastError < netError;
+		return i > 100;// || std::fabs( lastError - currentError ) / lastError < netError;
 	}
 	std::vector<std::vector<double>> inputValues;
 	std::vector<std::vector<double>> expectedValues;

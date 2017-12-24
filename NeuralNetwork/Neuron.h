@@ -4,28 +4,31 @@
 #include <vector>
 #include <fstream>
 #include "ActivateFunction.h"
+#include "LayerData.h"
 using namespace std;
 
 class Neuron
 {
 	std::vector<double> weights;
 	double Bias;
-
-	double LastNET;
+	ActivationFunction function;
 public:
-	Neuron( std::vector<double> theWeights): Bias( 0. ), weights( theWeights ){}
-	double Activate( std::vector<double> inputVector )
+	Neuron( std::vector<double> theWeights, double theBias, ActivationFunction theFunction): 
+		Bias( theBias ), weights( theWeights ), function(theFunction){}
+	double Activate( double net, std::vector<double> nets )
 	{
-		SigmoidFunction func;
-		return func.Compute( NET( inputVector ) );
+		return function.Compute( net, nets );
 	}
-	double NET( std::vector<double> inputVector )
+	ActivationFunction GetActivationFunction()
+	{
+		return function;
+	}
+	double NET( const LayerData& previousLayer )
 	{
 		double result = 0.0;
-		for ( int i = 0; i < inputVector.size(); i++ )
-			result += inputVector[i] * weights[i];
+		for ( size_t i = 0; i < previousLayer.valuesAfterActivation.size(); i++ )
+			result += previousLayer.valuesAfterActivation[i] * weights[i];
 		result += Bias;
-		LastNET = result;
 		return result;
 	}
 
@@ -49,20 +52,10 @@ public:
 		return Bias;
 	}
 
-	void SetLastNET( double theLastNET )
-	{
-		LastNET = theLastNET;
-	}
-
-	double GetLastNET()
-	{
-		return LastNET;
-	}
-
 	void WeightsSerializer( fstream& out )
 	{
 		out << weights.size() << " ";
-		for ( int i = 0; i < weights.size(); i++ )
+		for ( size_t i = 0; i < weights.size(); i++ )
 			out << weights[i]<<"  ";
 	}
 

@@ -6,6 +6,9 @@
 #include <ctime>
 #include <algorithm>
 #include "Layer.h"
+#include "NetworkData.h"
+#include "LayerData.h"
+#include "ActivateFunction.h"
 
 class NeuralNetwork
 {
@@ -23,8 +26,9 @@ public:
 		size( theSize ),
 		numLayers( theSize.size() )
 	{
-		std::vector<std::vector<double>> weightFurst( size[0] );
-		layers.push_back( new Layer( size[0], weightFurst ));
+		std::vector<std::vector<double>> weightFirst( size[0] );
+		std::vector<double> biasesFirst( size[0] );
+		layers.push_back( new Layer( size[0], weightFirst, biasesFirst, ActivationFunction::Sigmoid()));
 		for ( size_t k = 1; k < numLayers; k++ )
 		{
 			std::vector<std::vector<double>> weightsN;
@@ -32,56 +36,55 @@ public:
 			for ( size_t i = 0; i < weightsN.size(); i++ )
 				weightsN[i].resize( size[k - 1] );
 
-			for ( int i = 0; i < weightsN.size(); i++ )
-				for ( int j = 0; j < weightsN[i].size(); j++ )
+			for ( size_t i = 0; i < weightsN.size(); i++ )
+				for ( size_t j = 0; j < weightsN[i].size(); j++ )
 					weightsN[i][j] = ( rand() % 100 - 50 ) / 100.0;
-				layers.push_back( new Layer( size[k], weightsN ) );
+			
+			std::vector<double> biases( size[k] );
+			for ( size_t i = 0; i < biases.size(); i++ )
+				biases[i] = ( rand() % 100 - 50 ) / 100.0;
+
+			if ( k < numLayers - 1 )
+				layers.push_back( new Layer( size[k], weightsN, biases, ActivationFunction::Sigmoid() ) );
+			else
+				layers.push_back( new Layer( size[k], weightsN, biases, ActivationFunction::SoftMax() ));
 		}
 	}
 
-	std::vector<double> Perform( std::vector<double> inputVaues )
+	NetworkData Perform( std::vector<double> inputValues ) const
 	{
-		layers[0]->SetLastOutput( inputVaues );
-		for ( int i = 1; i < layers.size(); i++ )
-			layers[i]->Compute( layers[i - 1]->GetLastOutput() );
-		return layers[layers.size() - 1]->GetLastOutput();
+		LayerData inputLayerData;
+		inputLayerData.nets = inputValues;
+		inputLayerData.valuesAfterActivation = inputValues;
+		NetworkData result;
+		result.add( inputLayerData );
+
+		for ( size_t i = 1; i < layers.size(); i++ )
+		{
+			LayerData layerData = layers[i]->Compute( result[i - 1] );
+			result.add( layerData );
+		}
+		return result;
 	}
 
-	double CountError( std::vector<std::vector<double>> expectedValues, std::vector<std::vector<double>>
-					   currentValue )
-	{
-		double error = 0.;
-		for ( int i = 0; i < currentValue.size(); i++ )
-			for ( int j = 0; j < currentValue[i].size(); j++ )
-			{
-				error += fabs( currentValue[i][j] - expectedValues[i][j] );
-			}
-		return error;
-	}
-	double TestTrain( std::vector<std::vector<double>> inputValues, std::vector<std::vector<double>> expectedValues )
-	{
-		std::vector<std::vector<double>> results;
-		for ( size_t i = 0; i < inputValues.size(); i++ )
-		{
-			results.push_back( Perform( inputValues[i] ) );
-		}
-		for ( size_t i = 0; i < results.size(); i++ )
-		{
-			int maxIdx = std::distance( results[i].begin(), std::max_element( results[i].begin(), results[i].end() ) );
-			for ( size_t j = 0; j < results[i].size(); j++ )
-				results[i][j] = 0;
-			results[i][maxIdx] = 1;
-		}
-		double error = CountError( results, expectedValues );
-		return error/2.;
-	}
+	//double CountError( std::vector<std::vector<double>> expectedValues, std::vector<std::vector<double>>
+	//				   currentValue )
+	//{
+	//	double error = 0.;
+	//	for ( int i = 0; i < currentValue.size(); i++ )
+	//		for ( int j = 0; j < currentValue[i].size(); j++ )
+	//		{
+	//			error += fabs( currentValue[i][j] - expectedValues[i][j] );
+	//		}
+	//	return error;
+	//}
 
 	Layer* GetLayer( int idx )
 	{
 		return layers[idx];
     }
 
-	size_t GetLayerSize()
+	size_t GetLayerSize() const
 	{
 		return numLayers;
 	}

@@ -12,7 +12,7 @@ void PrintNetwork( int numLayers, std::vector<size_t> sizeLayers, std::vector<La
 	{
 		out << sizeLayers[i] << " ";
 	}
-	for ( int i = 0; i < layers.size(); i++ )
+	for ( size_t i = 0; i < layers.size(); i++ )
 	{
 		layers[i]->LayerSerializer( out );
 	}
@@ -35,10 +35,10 @@ void ReadNetwork( NeuralNetwork* network, std::string pathNetwork )
 	std::vector<Layer*> layers;
 	for ( size_t i = 0; i < size_Layers.size(); i++ )
 	{
-		std::vector<std::vector<double>> values;
-		Layer *newLayer = new Layer( 0, values );
-		newLayer->LayerReader( out, size_Layers );
-		layers.push_back( newLayer );
+	//	std::vector<std::vector<double>> values;
+	////	Layer *newLayer = new Layer( 0, values );
+	//	newLayer->LayerReader( out, size_Layers );
+	//	layers.push_back( newLayer );
 	}
 	network = new NeuralNetwork( size_Layers, layers );
 }

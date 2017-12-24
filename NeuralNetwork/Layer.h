@@ -2,35 +2,30 @@
 #include "Neuron.h"
 #include <vector>
 #include <fstream>
+#include "LayerData.h"
+#include "ActivateFunction.h"
 
 class Layer
 {
 public:
-	Layer( int theInputDemention, std::vector<std::vector<double>> weights ):
+	Layer( int theInputDemention, std::vector<std::vector<double>> weights, std::vector<double> biases,
+		   ActivationFunction function ):
 		inputDimension( theInputDemention ){
 		for ( int i = 0; i < inputDimension; i++ )
-			Neurons.push_back( new Neuron( weights[i]) );
+			Neurons.push_back( new Neuron( weights[i], biases[i], function) );
 	}
-	std::vector<double> LastOutput;
 	std::vector<Neuron*> Neurons;
 	int inputDimension;
 
 public:
-	void Compute( std::vector<double> inputVector )
+	LayerData Compute( const LayerData& previousLayer )
 	{
-		LastOutput.clear();
-		for ( int i = 0; i < Neurons.size(); i++ )
-		{		
-			LastOutput.push_back( Neurons[i]->Activate( inputVector ) );
-		}
-	}
-	std::vector<double> GetLastOutput()
-	{
-		return LastOutput;
-	}
-	void SetLastOutput( std::vector<double> theLastoutput )
-	{
-		LastOutput = theLastoutput;
+		LayerData result;
+		for ( size_t i = 0; i < Neurons.size(); i++ )
+			result.nets.push_back( Neurons[i]->NET( previousLayer ) );
+		for ( size_t i = 0; i < Neurons.size(); i++ )
+			result.valuesAfterActivation.push_back( Neurons[i]->Activate( result.nets[i], result.nets ) );
+		return result;
 	}
 	void SetWeights( std::vector<std::vector<double>> theWeightsNeuron )
 	{
@@ -53,7 +48,12 @@ public:
 		Neurons[idx]->SetBias( theBias );
 	}
 
-	size_t GetNeuronSize()
+	std::vector<Neuron*> GetNeurons() const
+	{
+		return Neurons;
+	}
+
+	size_t GetNeuronSize() const
 	{
 		return Neurons.size();
 	}
@@ -81,7 +81,7 @@ public:
 				out >> value;
 				weightsInput.push_back( value );
 			}
-			Neurons.push_back( new Neuron( weightsInput ) );
+//			Neurons.push_back( new Neuron( weightsInput ) );
 		}
 	
 	}

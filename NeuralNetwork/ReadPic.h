@@ -86,7 +86,7 @@ std::vector<double> read_mnist_labels( string full_path, size_t current )
 
 		file.read( ( char * ) &number_of_labels, sizeof( number_of_labels ) ), number_of_labels = reverseInt( number_of_labels );
 
-		for ( int i = 0; i <std::min((size_t)number_of_labels, current); i++ )
+		for ( size_t i = 0; i <std::min((size_t)number_of_labels, current); i++ )
 		{
 			unsigned char temp = 0;
 			file.read( ( char* ) &temp, sizeof( temp ) );

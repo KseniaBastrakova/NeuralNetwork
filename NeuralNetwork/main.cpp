@@ -5,13 +5,15 @@
 #include <vector>
 #include <cstdlib>
 #include <cmath>
+ 
 
 #include "NeuralNetwork.h"
+#include "LossFunction.h"
 #include "ReadPic.h"
 #include "LearningAlgorithm.h"
 #include "SerializationFunction.h"
 
-const int numberNetLearnElements = 1000000;
+const int numberNetLearnElements = 100000;
 
 int main( int argc, char** argv )
 {
@@ -29,18 +31,18 @@ int main( int argc, char** argv )
 	}
 
 	//std::string trainImageMNIST( "C:\\test\\train-images-idx3-ubyte\\train-images.idx3-ubyte" );
-//	std::string trainLabelsMNIST( "C:\\test\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte" );
+	//std::string trainLabelsMNIST( "C:\\test\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte" );
 	
-//	std::string testImageMNIST( "C:\\test\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte" );
-//	std::string testLabelsMNIST( "C:\\test\\t10k-labels-idx1-ubyte\\t10k-labels.idx1-ubyte" );
+	///std::string testImageMNIST( "C:\\test\\t10k-images-idx3-ubyte\\t10k-images.idx3-ubyte" );
+	//std::string testLabelsMNIST( "C:\\test\\t10k-labels-idx1-ubyte\\t10k-labels.idx1-ubyte" );
 
 	std::string trainImageMNIST( argv[1] );
 	std::string trainLabelsMNIST( argv[2] );
 	std::string testImageMNIST( argv[3] );
 	std::string testLabelsMNIST( argv[4] );
 	int hiddenLayerSize = 1;
-	double learnRate = 0.9;
-	double crossError = 0.001;
+	double learnRate = 0.01;
+	double crossError = 0.0001;
 
 
 
@@ -68,9 +70,10 @@ int main( int argc, char** argv )
 
 	for ( int i = 0; i < hiddenLayerSize; i++ )
 	{
-		cout << "Input size for hidden layer #   " << i<<"  ";
+		cout << "Input size for hidden layer #" << i<<"  ";
 		cin >> hiddenLayersSizes[i];
 	}
+	std::cout << "Loading data...\n";
 	std::vector<std::vector<double>> trainData_MNIST;
 	trainData_MNIST = read_mnist_images( trainImageMNIST, numberNetLearnElements );
 
@@ -79,7 +82,7 @@ int main( int argc, char** argv )
 
 	std::vector<std::vector<double>> trainLabel_MNIST;
 	trainLabel_MNIST.resize( vec_labels.size() );
-	for ( int i = 0; i < trainLabel_MNIST.size(); i++ )
+	for ( size_t i = 0; i < trainLabel_MNIST.size(); i++ )
 	{
 		trainLabel_MNIST[i] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 		trainLabel_MNIST[i][( int ) vec_labels[i]] = 1.0;
@@ -94,7 +97,7 @@ int main( int argc, char** argv )
 	std::vector<double> vec_test_labels = read_mnist_labels( testLabelsMNIST, testData_MNIST.size());
 	std::vector<std::vector<double>> testLabel_MNIST;
 	testLabel_MNIST.resize( testData_MNIST.size() );
-	for ( int i = 0; i < testLabel_MNIST.size(); i++ )
+	for ( size_t i = 0; i < testLabel_MNIST.size(); i++ )
 	{
 		testLabel_MNIST[i] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 		testLabel_MNIST[i][( int ) vec_test_labels[i]] = 1.0;
@@ -106,9 +109,11 @@ int main( int argc, char** argv )
 		size[i] = hiddenLayersSizes[i - 1];
 	size[0] = sizeInput;
 	size[hiddenLayerSize + 1] = sizeOutput;
-	NeuralNetwork netWork( size );
 
-	Training trainNetwork( &netWork, trainData_MNIST, trainLabel_MNIST,crossError, learnRate );
+	NeuralNetwork network( size );
+
+	std::cout << "\nStarting training...\n";
+	Training trainNetwork( &network, trainData_MNIST, trainLabel_MNIST,crossError, learnRate );
 	
 	trainNetwork.Perform();
 
@@ -117,11 +122,17 @@ int main( int argc, char** argv )
 
 //	ReadNetwork( network2, "C:\\test\\test.txt" );
 
-    double testError = netWork.TestTrain( testData_MNIST, testLabel_MNIST ) / testData_MNIST.size();
 
-	double trainError = netWork.TestTrain( trainData_MNIST, trainLabel_MNIST ) / trainData_MNIST.size();
 
-	std::cout << "!!!  result train  " << trainError << " result test " <<  testError<<std::endl;
+	std::cout << "Training completed\n\n";
+	double trainError = GetError( network, trainData_MNIST, trainLabel_MNIST );
+	double trainAccuracy = GetAccuracyPercent( network, trainData_MNIST, trainLabel_MNIST );
+	std::cout << "   Train data set: accuracy = " << trainAccuracy << "%, cross entropy = "
+		<< trainError << "\n";
+	double testError = GetError( network, testData_MNIST, testLabel_MNIST );
+	double testAccuracy = GetAccuracyPercent( network, testData_MNIST, testLabel_MNIST );
+	std::cout << "   Test data set: accuracy = " << testAccuracy << "%, cross entropy = "
+		<< testError << "\n";
 
 	return 0;
 }
