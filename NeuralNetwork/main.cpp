@@ -41,8 +41,8 @@ int main( int argc, char** argv )
 	std::string testImageMNIST( argv[3] );
 	std::string testLabelsMNIST( argv[4] );
 	int hiddenLayerSize = 1;
-	double learnRate = 0.01;
-	double crossError = 0.0001;
+	double learnRate = 0.02;
+	double crossError = 0.00005;
 
 
 

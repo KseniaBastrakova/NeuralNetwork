@@ -140,7 +140,7 @@ private:
 	}
 	bool IsOver( int i, double lastError, double currentError)
 	{
-		return i > 100;// || std::fabs( lastError - currentError ) / lastError < netError;
+		return i > 50;// || std::fabs( lastError - currentError ) / lastError < netError;
 	}
 	std::vector<std::vector<double>> inputValues;
 	std::vector<std::vector<double>> expectedValues;

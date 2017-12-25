@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{24FEE0B1-0082-4814-95D4-8F28F73A0DAD}</ProjectGuid>
+    <ProjectGuid>{DC64B755-F428-48BD-A074-5D73C9DD785E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>ConsoleApplication9</RootNamespace>
+    <RootNamespace>NeuralNetwork</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -142,25 +142,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
+    <ClCompile Include="..\ActivateFunction.cpp" />
+    <ClCompile Include="..\LossFunction.cpp" />
+    <ClCompile Include="..\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ActivateFunction.h" />
-    <ClInclude Include="LearningAlgorithm.h" />
-    <ClInclude Include="IMultilayerNeuralNetwork.h" />
-    <ClInclude Include="Layer.h" />
-    <ClInclude Include="NeuralNetwork.h" />
-    <ClInclude Include="Neuron.h" />
-    <ClInclude Include="ReadPic.h" />
-    <ClInclude Include="SerializationFunction.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="ActivateFunction.cpp" />
-    <ClCompile Include="LossFunction.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="stdafx.cpp" />
+    <ClInclude Include="..\ActivateFunction.h" />
+    <ClInclude Include="..\ErrorFunction.h" />
+    <ClInclude Include="..\Layer.h" />
+    <ClInclude Include="..\LayerData.h" />
+    <ClInclude Include="..\LearningAlgorithm.h" />
+    <ClInclude Include="..\LossFunction.h" />
+    <ClInclude Include="..\NetworkData.h" />
+    <ClInclude Include="..\NeuralNetwork.h" />
+    <ClInclude Include="..\Neuron.h" />
+    <ClInclude Include="..\ReadPic.h" />
+    <ClInclude Include="..\SerializationFunction.h" />
+    <ClInclude Include="..\SigmoidFunction.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
